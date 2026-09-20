@@ -1,8 +1,6 @@
 import re
 
 
-# Suspicious patterns for the MVP.
-# These are indicators, NOT proof of malware.
 SUSPICIOUS_PATTERNS = {
     "Dynamic Code Execution": [
         r"\beval\s*\(",
@@ -45,12 +43,11 @@ SUSPICIOUS_PATTERNS = {
 
 def scan_code(source_code):
     """
-    Perform static analysis on source code.
-
-    The code is NEVER executed.
+    Analyze source code without executing it.
     """
 
     findings = []
+
     lines = source_code.splitlines()
 
     for line_number, line in enumerate(lines, start=1):
@@ -67,33 +64,47 @@ def scan_code(source_code):
                         "code": line.strip(),
                     })
 
+                    # Don't report the same category
+                    # multiple times for the same line.
                     break
 
     return findings
 
 
+def calculate_indicators(findings):
+    """
+    Convert scanner findings into fuzzy input values.
+    """
 
+    indicators = {
+        "obfuscation": 0,
+        "external_loading": 0,
+        "dynamic_execution": 0,
+        "suspicious_operations": 0,
+    }
 
+    for finding in findings:
 
+        category = finding["category"]
 
+        if category == "Encoded / Obfuscated Content":
+            indicators["obfuscation"] += 35
 
-if __name__ == "__main__":
+        elif category == "External Code Loading":
+            indicators["external_loading"] += 40
 
-    test_code = """
-import requests
-import base64
+        elif category == "Dynamic Code Execution":
+            indicators["dynamic_execution"] += 45
 
-data = base64.b64decode("SGVsbG8=")
+        elif category in [
+            "System Command Execution",
+            "Network Activity",
+            "Credential / Secret Access"
+        ]:
+            indicators["suspicious_operations"] += 25
 
-eval(data)
+    # Keep values between 0 and 100.
+    for key in indicators:
+        indicators[key] = min(indicators[key], 100)
 
-requests.get("https://example.com")
-
-os.system("whoami")
-"""
-
-    results = scan_code(test_code)
-
-    for result in results:
-        print(result)
-
+    return indicators
