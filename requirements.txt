@@ -1,0 +1,6 @@
+streamlit
+scikit-fuzzy
+langchain
+langchain-google-genai
+python-dotenv
+plotly
