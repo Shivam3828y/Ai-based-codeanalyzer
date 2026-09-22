@@ -174,7 +174,7 @@ if uploaded_file:
             )
 
             st.progress(
-                indicators["obfuscation"] / 100
+                min(indicators["obfuscation"], 100) / 100
             )
 
             st.write(
@@ -183,7 +183,7 @@ if uploaded_file:
             )
 
             st.progress(
-                indicators["external_loading"] / 100
+                min(indicators["external_loading"], 100) / 100
             )
 
         with indicator_col2:
@@ -194,7 +194,7 @@ if uploaded_file:
             )
 
             st.progress(
-                indicators["dynamic_execution"] / 100
+                min(indicators["dynamic_execution"], 100) / 100
             )
 
             st.write(
@@ -203,7 +203,7 @@ if uploaded_file:
             )
 
             st.progress(
-                indicators["suspicious_operations"] / 100
+                min(indicators["suspicious_operations"], 100) / 100
             )
 
         # --------------------------------------------------
@@ -269,18 +269,53 @@ if uploaded_file:
                     recommendation=recommendation
                 )
 
-                st.markdown(ai_explanation)
+                if ai_explanation:
+                    st.markdown(ai_explanation)
+                else:
+                    st.warning(
+                        "The AI service returned an empty response. "
+                        "The static and fuzzy analysis results are still valid."
+                    )
 
             except Exception as error:
 
-                st.error(
-                    "AI analysis failed."
-                )
+                error_message = str(error)
 
-                st.code(
-                    str(error),
-                    language="text"
-                )
+                # Handle temporary Gemini availability problems
+                if (
+                    "503" in error_message
+                    or "UNAVAILABLE" in error_message
+                    or "high demand" in error_message.lower()
+                ):
+
+                    st.warning(
+                        "AI explanation is temporarily unavailable "
+                        "because the Gemini service is experiencing "
+                        "high demand."
+                    )
+
+                    st.info(
+                        "The static analysis and fuzzy-logic risk "
+                        "assessment were completed successfully. "
+                        "AI explanation is an additional analysis layer "
+                        "and does not affect the calculated risk score."
+                    )
+
+                elif (
+                    "GOOGLE_API_KEY" in error_message
+                    or "API key" in error_message
+                ):
+
+                    st.error(
+                        "AI analysis is unavailable because the "
+                        "Gemini API configuration could not be verified."
+                    )
+
+                else:
+
+                    st.warning(
+                        "AI explanation could not be generated at this time."
+                    )
 
         # --------------------------------------------------
         # 7. FINAL RECOMMENDATION

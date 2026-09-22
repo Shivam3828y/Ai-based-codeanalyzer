@@ -9,6 +9,10 @@ from langchain_core.prompts import ChatPromptTemplate
 load_dotenv()
 
 
+# ============================================================
+# CREATE GEMINI MODEL
+# ============================================================
+
 def create_ai_model():
     """
     Create and return the Gemini model through LangChain.
@@ -23,12 +27,18 @@ def create_ai_model():
         )
 
     model = ChatGoogleGenerativeAI(
-        model="gemini-3.8-flash",
-        google_api_key=api_key
+        model="gemini-3.5-flash-lite",
+        google_api_key=api_key,
+        temperature=0.2,
+        max_retries=2
     )
 
     return model
 
+
+# ============================================================
+# GENERATE SECURITY EXPLANATION
+# ============================================================
 
 def generate_security_explanation(
     filename,
@@ -108,20 +118,34 @@ Provide:
         "recommendation": recommendation
     })
 
-    # Extract clean text from Gemini response
+    # ========================================================
+    # EXTRACT RESPONSE TEXT
+    # ========================================================
+
     content = response.content
 
     if isinstance(content, list):
+
         text_parts = []
 
         for item in content:
-            if isinstance(item, dict) and item.get("type") == "text":
-                text_parts.append(item.get("text", ""))
+
+            if (
+                isinstance(item, dict)
+                and item.get("type") == "text"
+            ):
+                text_parts.append(
+                    item.get("text", "")
+                )
 
         return "\n".join(text_parts).strip()
 
-    return str(content)
+    return str(content).strip()
 
+
+# ============================================================
+# DIRECT TEST
+# ============================================================
 
 if __name__ == "__main__":
     print("CodeTrust AI engine loaded successfully.")
