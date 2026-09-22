@@ -23,7 +23,7 @@ def create_ai_model():
         )
 
     model = ChatGoogleGenerativeAI(
-        model="gemini-3.6-flash",
+        model="gemini-3.8-flash",
         google_api_key=api_key
     )
 
