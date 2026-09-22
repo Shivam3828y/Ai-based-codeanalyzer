@@ -75,7 +75,10 @@ if uploaded_file:
     with col2:
         st.write("**Size:**", f"{uploaded_file.size:,} bytes")
 
-    # Read uploaded file as text
+    # --------------------------------------------------
+    # READ UPLOADED FILE
+    # --------------------------------------------------
+
     content = uploaded_file.read().decode(
         "utf-8",
         errors="replace"
@@ -86,6 +89,7 @@ if uploaded_file:
     # --------------------------------------------------
 
     with st.expander("View Uploaded Code", expanded=False):
+
         st.code(
             content[:10000],
             language="text"
@@ -107,7 +111,9 @@ if uploaded_file:
         # 1. STATIC SCANNER
         # --------------------------------------------------
 
-        with st.spinner("Scanning code for suspicious indicators..."):
+        with st.spinner(
+            "Scanning code for suspicious indicators..."
+        ):
 
             findings = scan_code(content)
 
@@ -117,7 +123,9 @@ if uploaded_file:
         # 2. FUZZY LOGIC
         # --------------------------------------------------
 
-        with st.spinner("Calculating fuzzy security risk..."):
+        with st.spinner(
+            "Calculating fuzzy security risk..."
+        ):
 
             risk_score = calculate_risk(
                 obfuscation=indicators["obfuscation"],
@@ -141,18 +149,21 @@ if uploaded_file:
         col1, col2, col3 = st.columns(3)
 
         with col1:
+
             st.metric(
                 "Risk Score",
                 f"{risk_score}/100"
             )
 
         with col2:
+
             st.metric(
                 "Risk Level",
                 risk_level
             )
 
         with col3:
+
             st.metric(
                 "Recommendation",
                 recommendation
@@ -270,8 +281,11 @@ if uploaded_file:
                 )
 
                 if ai_explanation:
+
                     st.markdown(ai_explanation)
+
                 else:
+
                     st.warning(
                         "The AI service returned an empty response. "
                         "The static and fuzzy analysis results are still valid."
@@ -279,43 +293,15 @@ if uploaded_file:
 
             except Exception as error:
 
-                error_message = str(error)
+                # Temporary debugging information.
+                # This will be removed after the deployment issue
+                # has been identified and fixed.
 
-                # Handle temporary Gemini availability problems
-                if (
-                    "503" in error_message
-                    or "UNAVAILABLE" in error_message
-                    or "high demand" in error_message.lower()
-                ):
+                st.error(
+                    "AI explanation could not be generated."
+                )
 
-                    st.warning(
-                        "AI explanation is temporarily unavailable "
-                        "because the Gemini service is experiencing "
-                        "high demand."
-                    )
-
-                    st.info(
-                        "The static analysis and fuzzy-logic risk "
-                        "assessment were completed successfully. "
-                        "AI explanation is an additional analysis layer "
-                        "and does not affect the calculated risk score."
-                    )
-
-                elif (
-                    "GOOGLE_API_KEY" in error_message
-                    or "API key" in error_message
-                ):
-
-                    st.error(
-                        "AI analysis is unavailable because the "
-                        "Gemini API configuration could not be verified."
-                    )
-
-                else:
-
-                    st.warning(
-                        "AI explanation could not be generated at this time."
-                    )
+                st.exception(error)
 
         # --------------------------------------------------
         # 7. FINAL RECOMMENDATION
